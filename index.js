@@ -5,6 +5,7 @@ const connectDB = require('./database/dbconfig');
 const productRoutes = require('./routes/products/product.route');
 const userRoutes = require('./routes/user/user.route');
 const adminRoutes = require('./routes/admin/admin.route');
+const adminOrderRoutes = require('./routes/adminOrders/adminOrders.route');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/shopkart', productRoutes);
 app.use('/shopkart', userRoutes);
 app.use('/shopkart', adminRoutes);
+app.use('/shopkart/admin/user-order', adminOrderRoutes);
 
 app.get('/', function (req, res){
     res.send('This is the default route')

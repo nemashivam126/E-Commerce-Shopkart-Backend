@@ -18,7 +18,11 @@ const cartItemSchema = new mongoose.Schema({
     productColor: {
         type: String,
         required: false
-    }
+    },
+    productPrice: {
+        type: Number,
+        required: true
+    },
 });
 
 const addressSchema = new mongoose.Schema({
@@ -56,6 +60,52 @@ const addressSchema = new mongoose.Schema({
     }
 });
 
+const orderItemSchema = new mongoose.Schema({
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true
+    },
+    quantity: {
+        type: Number,
+        required: true,
+        default: 1
+    },
+    productSize: {
+        type: String,
+        required: false
+    },
+    productColor: {
+        type: String,
+        required: false
+    },
+    status: {
+        type: String,
+        required: true,
+        default: 'idle'
+    },
+    amount: {
+        type: Number,
+        required: true
+    },
+    estimatedDate: {
+        type: Date,
+        default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // default to 7 days from now
+    }
+});
+
+const orderSchema = new mongoose.Schema({
+    items: [orderItemSchema],
+    totalAmount: {
+        type: Number,
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    address: addressSchema
+});
 
 const userSchema = new mongoose.Schema({
     fname: {
@@ -88,11 +138,8 @@ const userSchema = new mongoose.Schema({
     },
     cart: [cartItemSchema],
     addresses: [addressSchema],
-    selectedAddress: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address',
-        default: null
-    },
+    selectedAddress: addressSchema,
+    orders: [orderSchema],
     isAdmin: {
         type: Boolean,
         default: false,

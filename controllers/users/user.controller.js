@@ -52,7 +52,7 @@ const addUser = async (req, res) => {
                     isAdmin: newUser.isAdmin
                 }
             }
-            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '1h'});
+            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '24h'});
             res.status(201).json({ success: true, token, user: data.user });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -84,7 +84,7 @@ const getUsers = async (req, res) => {
 
 const addToCart = async (req, res) => {
     const { id } = req.params;
-    const { productId, quantity, productSize, productColor } = req.body;
+    const { productId, quantity, productSize, productColor, productPrice } = req.body;
 
     try {
         const user = await User.findById(id);
@@ -99,7 +99,7 @@ const addToCart = async (req, res) => {
             cartItem.quantity += quantity;
         } else {
             // If the product does not exist, add a new item to the cart
-            user.cart.push({ productId, quantity, productSize, productColor });
+            user.cart.push({ productId, quantity, productSize, productColor, productPrice });
         }
 
         await user.save();
@@ -184,7 +184,7 @@ const signIn = async (req, res) => {
                     isAdmin: user.isAdmin
                 }
             }
-            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '1h'});
+            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '24h'});
             res.status(200).json({success: true, token, user: data.user});
         } else {
             res.status(404).json({success: false, message: 'Incorrect password'})
@@ -299,13 +299,181 @@ const setSelectedAddress = async (req, res) => {
         if (!addressExists) {
             return res.status(404).json({ message: 'Address not found' });
         }
-        user.selectedAddress = addressId;
+        user.selectedAddress = addressExists;
         await user.save();
-        res.status(200).json({ message: 'Selected address updated successfully', selectedAddress: user.selectedAddress });
+        res.status(200).json({ message: 'Selected address updated successfully', selectedAddress: addressExists });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
     }
 };
 
-module.exports = { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress };
+const setUserOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { items, totalAmount, address } = req.body;
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.orders.push({ items, totalAmount, address });
+        user.cart = [];
+
+        await user.save();
+
+        res.status(200).json({ message: 'Order placed successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const emptyCart = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart = [];
+        await user.save();
+
+        res.status(200).json({ message: 'Cart cleared successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const viewUserOrders = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user.orders);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getOrderItemById = async (req, res) => {
+    try {
+      const { orderItemId } = req.params;
+      const user = await User.findOne({ 'orders.items._id': orderItemId }, { 'orders.$': 1 }).populate('orders.items.productId');
+  
+      if (!user) {
+        return res.status(404).json({ message: 'Order item not found' });
+      }
+  
+      const order = user.orders.find(order => 
+        order.items.some(item => item._id.toString() === orderItemId)
+      );
+  
+      if (!order) {
+        return res.status(404).json({ message: 'Order item not found' });
+      }
+  
+      const orderItem = order.items.find(item => item._id.toString() === orderItemId);
+  
+      res.status(200).json(orderItem);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error });
+    }
+  };
+
+// const getOrderItemById = async(req, res) => {
+//     const { id } = req.params;
+//     try {
+//         const user = await User.findById(id);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+//         res.status(200).json(user.orders);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// }
+
+const getAllUsersOrders = async (req, res) => {
+    try {
+        // Find users who have orders
+        const usersWithOrders = await User.find({ orders: { $exists: true, $not: { $size: 0 } } }).populate({
+            path: 'orders.items.productId',
+            model: 'Product'  // Assuming 'Product' is your product model name
+        }).exec();
+
+        res.status(200).json(usersWithOrders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const getAllUserOrders = async (req, res) => {
+    const { id } = req.params; // Assuming userId is passed as a parameter
+    
+    try {
+        // Find the user by their ID and populate their orders
+        const user = await User.findById(id).populate({
+            path: 'orders.items.productId',
+            model: 'Product' // Assuming 'Product' is your product model name
+        }).exec();
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Return only the user's orders
+        res.status(200).json(user.orders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const updateOrderItemStatus = async (req, res) => {
+    const { userId, itemId } = req.params;
+    const { status, estimatedDate } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const order = user.orders.find(order => order.items.some(item => item._id.toString() === itemId));
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const orderItem = order.items.find(item => item._id.toString() === itemId);
+
+        if (!orderItem) {
+            return res.status(404).json({ message: 'Order item not found' });
+        }
+
+        orderItem.status = status;
+
+        if (estimatedDate) {
+            orderItem.estimatedDate = new Date(estimatedDate);
+        }
+
+        await user.save();
+
+        res.json(orderItem);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+module.exports = { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus };

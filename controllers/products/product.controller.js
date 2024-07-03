@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose');
 const storage = require('../../helper/multerStorage/storage.Config');
 const Product = require('../../models/products/product.model');
 const multer = require('multer');
@@ -63,13 +64,36 @@ const removeProduct = async(req, res) => {
     }
 };
 
-const viewProduct = async(req, res) => {
+// const viewProduct = async(req, res) => {
+//     const { productId } = req.params;
+//     try {
+//         const product = await Product.findOne({productId});
+//         if (!product) {
+//             return res.status(404).json({ message: 'Product not found' });
+//         }
+//         res.status(200).json(product);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
+const viewProduct = async (req, res) => {
     const { productId } = req.params;
+
     try {
-        const product = await Product.findOne({productId});
+        let product;
+        if (mongoose.Types.ObjectId.isValid(productId)) {
+            // If productId is a valid ObjectId, search by _id
+            product = await Product.findById(productId);
+        } else {
+            // Otherwise, search by productId
+            product = await Product.findOne({ productId });
+        }
+
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+
         res.status(200).json(product);
     } catch (error) {
         res.status(500).json({ error: error.message });
