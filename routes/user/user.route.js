@@ -1,5 +1,5 @@
 const express = require('express');
-const { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus } = require('../../controllers/users/user.controller');
+const { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow } = require('../../controllers/users/user.controller');
 const authenticateToken = require('../../helper/authenticateToken/authenticateToken');
 const router = express.Router();
 
@@ -25,5 +25,6 @@ router.get('/order/:orderItemId', authenticateToken, getOrderItemById);
 router.get('/orders/:id', authenticateToken, getAllUserOrders);
 router.get('/orders', authenticateToken, getAllUsersOrders);
 router.put('/orders/:userId/items/:itemId', authenticateToken, updateOrderItemStatus);
+router.post('/user/:id/buynow', authenticateToken, buyNow);
 
 module.exports = router;

@@ -75,7 +75,7 @@ const signIn = async (req, res) => {
                     isAdmin: admin.isAdmin
                 }
             }
-            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '1h'});
+            const token = jwt.sign(data, process.env.SECRET_KEY, {expiresIn: '24h'});
             res.status(200).json({success: true, token, user: data.admin});
         } else {
             res.status(404).json({success: false, message: 'Incorrect password'})

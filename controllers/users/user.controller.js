@@ -476,4 +476,31 @@ const updateOrderItemStatus = async (req, res) => {
     }
 };
 
-module.exports = { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus };
+const buyNow = async (req, res) => {
+    const { id } = req.params; // user ID
+    const { productId, quantity, productSize, productColor, amount, address } = req.body;
+
+    try {
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Create a new order with the product
+        const newOrder = {
+            items: [{ productId, quantity, productSize, productColor, amount, status: 'Pending' }],
+            totalAmount: amount * quantity,
+            address,
+        };
+
+        user.orders.push(newOrder);
+        await user.save();
+
+        res.status(200).json({ message: 'Order placed successfully', order: newOrder });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
+
+module.exports = { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow };
