@@ -1,6 +1,6 @@
 const express = require('express');
 const { addAdminUser, signIn } = require('../../controllers/admin/admin.controller');
-const authenticateToken = require('../../helper/authenticateToken/authenticateToken');
+const authenticateToken = require('../../middlewares/authenticateToken/authenticateToken');
 const router = express.Router();
 
 // Define routes

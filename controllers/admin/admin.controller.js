@@ -1,8 +1,10 @@
 require('dotenv').config();
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
-const storage = require('../../helper/multerStorage/storage.Config');
+const storage = require('../../middlewares/multerStorage/storage.Config');
 const Admin = require('../../models/admin/admin.model');
+const { uploadOnCloudinary } = require('../../utils/cloudinary');
+const fs = require('fs');
 
 
 const upload = multer({ storage: storage }).single('image');
@@ -26,6 +28,16 @@ const addAdminUser = async (req, res) => {
                 return res.status(400).json({ error: 'This email is already registered. Try entering different email.' });
             }
 
+            //save image on cloudinary
+            let imageUrl = null;
+            if (req.file) {
+                const response = await uploadOnCloudinary(req.file.path);
+                if (response && response.url) {
+                    imageUrl = response.url;
+                    fs.unlinkSync(req.file.path); // Remove the locally saved file
+                }
+            }
+
             // Create a new admin object
             const newAdmin = new Admin({
                 fname,
@@ -34,7 +46,8 @@ const addAdminUser = async (req, res) => {
                 email,
                 password,  // Storing plaintext password
                 gender,
-                image: req.file ? `http://localhost:${process.env.PORT || 5000}/uploads/${req.file.filename}` : null,
+                // image: req.file ? `http://localhost:${process.env.PORT || 5000}/uploads/${req.file.filename}` : null,
+                image: imageUrl,
                 isAdmin: true
             });
 

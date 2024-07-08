@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { addProduct, upload, allProducts, removeProduct, viewProduct, updateProduct, viewProduct2 } = require('../../controllers/products/product.controller');
-const authenticateToken = require('../../helper/authenticateToken/authenticateToken');
+const authenticateToken = require('../../middlewares/authenticateToken/authenticateToken');
 
 // Define routes
 router.post('/add-product', authenticateToken, upload.array('images'), addProduct);

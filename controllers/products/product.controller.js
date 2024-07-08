@@ -1,15 +1,25 @@
 const { default: mongoose } = require('mongoose');
-const storage = require('../../helper/multerStorage/storage.Config');
+const storage = require('../../middlewares/multerStorage/storage.Config');
 const Product = require('../../models/products/product.model');
 const multer = require('multer');
+const { uploadOnCloudinary } = require('../../utils/cloudinary');
+const fs = require('fs');
 
 const upload = multer({ storage: storage });
 
 const addProduct = async (req, res) => {
     try {
         const { title, genericName, description, category, price, discount, rating, stock, availableSizes, availableColors } = req.body;
-        const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
+        // const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
+        // const thumbnail = images[0];
+
+        //save images on cloudinary
+        const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
+        const uploadResponses = await Promise.all(uploadPromises);
+
+        const images = uploadResponses.map(response => response.url);
         const thumbnail = images[0];
+
         let products = await Product.find({});
         let Id;
         if(products.length > 0){
@@ -128,9 +138,12 @@ const updateProduct = async (req, res) => {
         }
         // Check if files are uploaded
         if (req.files && req.files.length > 0) {
-            const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
+            // const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
+            const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
+            const uploadResponses = await Promise.all(uploadPromises);
+            const images = uploadResponses.map(response => response.url);
             updateData.images = images;
-            updateData.thumbnail = images[0]
+            updateData.thumbnail = images[0];
         }
         const product = await Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
         if (!product) {
