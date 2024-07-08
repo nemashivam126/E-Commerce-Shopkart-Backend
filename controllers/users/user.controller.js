@@ -1,10 +1,11 @@
 require('dotenv').config();
-const storage = require('../../middlewares/multerStorage/storage.Config');
+// const storage = require('../../middlewares/multerStorage/storage.Config');
 const User = require('../../models/users/user.model');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
-const { uploadOnCloudinary } = require('../../utils/cloudinary');
-const fs = require('fs');
+const { storage } = require('../../utils/cloudinary');
+// const { uploadOnCloudinary } = require('../../utils/cloudinary');
+// const fs = require('fs');
 
 
 const upload = multer({ storage: storage }).single('image');
@@ -29,15 +30,15 @@ const addUser = async (req, res) => {
                 return res.status(400).json({ error: 'This email is already registered. Try entering different email.' });
             }
 
-            //save image on cloudinary
-            let imageUrl = null;
-            if (req.file) {
-                const response = await uploadOnCloudinary(req.file.path);
-                if (response && response.url) {
-                    imageUrl = response.url;
-                    fs.unlinkSync(req.file.path); // Remove the locally saved file
-                }
-            }
+            // //save image on cloudinary
+            // let imageUrl = null;
+            // if (req.file) {
+            //     const response = await uploadOnCloudinary(req.file.path);
+            //     if (response && response.url) {
+            //         imageUrl = response.url;
+            //         fs.unlinkSync(req.file.path); // Remove the locally saved file
+            //     }
+            // }
 
             // Create a new user object
             const newUser = new User({
@@ -48,7 +49,8 @@ const addUser = async (req, res) => {
                 password,  // Storing plaintext password
                 gender,
                 // image: req.file ? `http://localhost:${process.env.PORT || 5000}/uploads/${req.file.filename}` : null,
-                image: imageUrl,
+                // image: imageUrl,
+                image: req.file ? req.file.path : null, // Cloudinary URL
                 isAdmin: false
             });
 

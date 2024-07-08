@@ -1,9 +1,10 @@
 const { default: mongoose } = require('mongoose');
-const storage = require('../../middlewares/multerStorage/storage.Config');
+// const storage = require('../../middlewares/multerStorage/storage.Config');
 const Product = require('../../models/products/product.model');
 const multer = require('multer');
-const { uploadOnCloudinary } = require('../../utils/cloudinary');
-const fs = require('fs');
+// const { uploadOnCloudinary } = require('../../utils/cloudinary');
+// const fs = require('fs');
+const { storage } = require('../../utils/cloudinary');
 
 const upload = multer({ storage: storage });
 
@@ -14,10 +15,13 @@ const addProduct = async (req, res) => {
         // const thumbnail = images[0];
 
         //save images on cloudinary
-        const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
-        const uploadResponses = await Promise.all(uploadPromises);
+        // const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
+        // const uploadResponses = await Promise.all(uploadPromises);
 
-        const images = uploadResponses.map(response => response.url);
+        // const images = uploadResponses.map(response => response.url);
+        // const thumbnail = images[0];
+
+        const images = req.files.map(file => file.path);
         const thumbnail = images[0];
 
         let products = await Product.find({});
@@ -137,11 +141,16 @@ const updateProduct = async (req, res) => {
             updateData.availableColors = availableColors.split(',').map(color => color.trim());
         }
         // Check if files are uploaded
+        // if (req.files && req.files.length > 0) {
+        //     // const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
+        //     const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
+        //     const uploadResponses = await Promise.all(uploadPromises);
+        //     const images = uploadResponses.map(response => response.url);
+        //     updateData.images = images;
+        //     updateData.thumbnail = images[0];
+        // }
         if (req.files && req.files.length > 0) {
-            // const images = req.files.map(file => `http://localhost:${process.env.PORT || 5000}/uploads/${file.filename}`);
-            const uploadPromises = req.files.map(file => uploadOnCloudinary(file.path));
-            const uploadResponses = await Promise.all(uploadPromises);
-            const images = uploadResponses.map(response => response.url);
+            const images = req.files.map(file => file.path);
             updateData.images = images;
             updateData.thumbnail = images[0];
         }
