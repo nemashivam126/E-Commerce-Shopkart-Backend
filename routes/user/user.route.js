@@ -1,10 +1,12 @@
 const express = require('express');
-const { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow } = require('../../controllers/users/user.controller');
+const { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow, updateUser, deleteUser } = require('../../controllers/users/user.controller');
 const authenticateToken = require('../../middlewares/authenticateToken/authenticateToken');
 const router = express.Router();
 
 // Define routes
 router.post('/SignUp', addUser);
+router.put('/update/:id/update-user', authenticateToken, updateUser);
+router.delete('/delete/:id/delete-user', authenticateToken, deleteUser);
 router.get('/view-user/:id', authenticateToken, viewUser);
 router.get('/users', authenticateToken, getUsers);
 router.put('/user/:id/addtocart', authenticateToken, addToCart);

@@ -87,6 +87,68 @@ const viewUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+const updateUser = async (req, res) => {
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+
+        const { id } = req.params;
+        const { fname, lname, contactNumber, email, password, gender } = req.body;
+
+        try {
+            const existingUser = await User.findById(id);
+            if (!existingUser) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            // Update user fields
+            existingUser.fname = fname || existingUser.fname;
+            existingUser.lname = lname || existingUser.lname;
+            existingUser.contactNumber = contactNumber || existingUser.contactNumber;
+            existingUser.email = email || existingUser.email;
+            existingUser.password = password || existingUser.password; // Should hash password in a real app
+            existingUser.gender = gender || existingUser.gender;
+
+            if (req.file) {
+                existingUser.image = req.file.path;
+            }
+
+            await existingUser.save();
+            const data = {
+                user: {
+                    id : existingUser._id,
+                    email: existingUser.email,
+                    firstName: existingUser.fname,
+                    lastName: existingUser.lname,
+                    avatar: existingUser.image,
+                    gender: existingUser.gender,
+                    isAdmin: existingUser.isAdmin,
+                    contactNumber: existingUser.contactNumber,
+                }
+            }
+            res.status(200).json({ success: true, user: data.user });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+};
+
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const user = await User.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const getUsers = async (req, res) => {
     const { id } = req.params;
     try {
@@ -518,4 +580,4 @@ const buyNow = async (req, res) => {
     }
 };
 
-module.exports = { addUser, viewUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow };
+module.exports = { addUser, viewUser, updateUser, deleteUser, getUsers, addToCart, removeFromCart, updateCartQuantity, viewUserCart, signIn, getCartCount, addAddress, updateAddress, deleteAddress, getAddresses, setSelectedAddress, setUserOrder, emptyCart, viewUserOrders, getOrderItemById, getAllUserOrders, getAllUsersOrders, updateOrderItemStatus, buyNow };
