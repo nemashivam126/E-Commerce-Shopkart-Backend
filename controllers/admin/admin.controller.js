@@ -175,4 +175,13 @@ const viewAdminDetails = async (req, res) => {
     }
 };
 
-module.exports = { addAdminUser, signIn, updateAdminDetails, deleteAdmin, viewAdminDetails };
+const getAdmins = async (req, res) => {
+    try {
+        const admin = await Admin.find({});
+        res.status(200).json(admin);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { addAdminUser, signIn, updateAdminDetails, deleteAdmin, viewAdminDetails, getAdmins };
