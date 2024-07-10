@@ -9,6 +9,6 @@ router.post('/admin/SignIn', signIn);
 router.put('/update/:id/update-admin', authenticateToken, updateAdminDetails);
 router.delete('/delete/:id/delete-admin', authenticateToken, deleteAdmin);
 router.get('/view-admin/:id', authenticateToken, viewAdminDetails);
-router.get('/admins', getAdmins);
+router.get('/admins', authenticateToken, getAdmins);
 
 module.exports = router;
