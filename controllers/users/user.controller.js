@@ -336,9 +336,9 @@ const updateAddress = async (req, res) => {
   
 // Delete an address for a user
 const deleteAddress = async (req, res) => {
-    const { userId, addressId } = req.params;
+    const { id, addressId } = req.params;
     try {
-        const user = await User.findById(userId);
+        const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
